@@ -238,3 +238,491 @@ int main() {
 
 //PUNKT 10
 //led3 bedzie na pinie 19 skoro 0 byl na 16
+#include <LPC21xx.H>
+
+#define LED0_bm 0x00010000
+// nowa maska zgodnie z zyczeniem (*2^3)
+#define LED3_bm 0x00080000 
+
+// stary delay
+void Delay(int iDelayInMS) {
+    int iLoopCounter;
+    int iIterations = iDelayInMS * 2500; 
+    for(iLoopCounter = 0; iLoopCounter < iIterations; iLoopCounter++) {}
+}
+
+int main() {
+    // teraz ustawiamy kierunek dla pinu diody LED3
+    IO1DIR = LED3_bm; 
+
+    while(1) {
+        // pulsujemy dioda LED3 (z czestotliwoscia 10 Hz jak poprzednio)
+			// teraz powinien migac bit 19 :OOOO
+        IO1SET = LED3_bm; 
+        Delay(50);
+        
+        IO1CLR = LED3_bm; 
+        Delay(50);
+    }
+}
+
+
+
+
+
+//PUNKT 11
+#include <LPC21xx.H>
+
+// definicje wszystkich masek dla diod LED0-LED3
+#define LED0_bm 0x00010000 // Pin 16
+#define LED1_bm 0x00020000 // Pin 17
+#define LED2_bm 0x00040000 // Pin 18
+#define LED3_bm 0x00080000 // Pin 19
+
+int main() {
+    // ustawiamy wszystkie cztery piny jako wyjsciowe za pomoca sumy bitowej (|)
+    IO1DIR = LED0_bm | LED1_bm | LED2_bm | LED3_bm;
+
+    // to dla pewnosci ze nie swieca:
+    IO1CLR = LED0_bm | LED1_bm | LED2_bm | LED3_bm;
+
+    // zapalanie po kolei bez opóznien:
+    IO1SET = LED0_bm; // Swieci LED0
+    IO1SET = LED1_bm; // Swieci LED0 i LED1
+    IO1SET = LED2_bm; // Swieci LED0, LED1 i LED2
+    IO1SET = LED3_bm; // Swieca wszystkie cztery (LED0, LED1, LED2, LED3)
+
+    while(1) {
+        // petla nieskonczona, zeby program nie skonczyl dzialania
+    }
+}
+
+
+
+
+
+
+//PUNKT12
+#include <LPC21xx.H>
+
+#define LED0_bm 0x00010000
+#define LED1_bm 0x00020000
+#define LED2_bm 0x00040000
+#define LED3_bm 0x00080000
+
+// dobry delay
+void Delay(int iDelayInMS) {
+    int iLoopCounter;
+    int iIterations = iDelayInMS * 2500; 
+    for(iLoopCounter = 0; iLoopCounter < iIterations; iLoopCounter++) {}
+}
+
+int main() {
+    // wszystkie 4 piny jako wyjscia
+    IO1DIR = LED0_bm | LED1_bm | LED2_bm | LED3_bm;
+
+    while(1) {
+        // LED0
+        IO1SET = LED0_bm;
+        Delay(250);         // 0.25 sekundy
+        IO1CLR = LED0_bm;
+
+        // LED1
+        IO1SET = LED1_bm;
+        Delay(250);
+        IO1CLR = LED1_bm;
+
+        // LED2
+        IO1SET = LED2_bm;
+        Delay(250);
+        IO1CLR = LED2_bm;
+
+        // LED3
+        IO1SET = LED3_bm;
+        Delay(250);
+        IO1CLR = LED3_bm;
+    }
+}
+
+
+
+
+
+//PUNKT13
+#include <LPC21xx.H>
+
+#define LED0_bm 0x00010000
+#define LED1_bm 0x00020000
+#define LED2_bm 0x00040000
+#define LED3_bm 0x00080000
+
+// dobry delay
+void Delay(int iDelayInMS) {
+    int iLoopCounter;
+    int iIterations = iDelayInMS * 2500; 
+    for(iLoopCounter = 0; iLoopCounter < iIterations; iLoopCounter++) {}
+}
+
+void LedInit() {
+    // ustawiamy piny LED0-LED3 jako wyjsciowe
+    // uzywamy sumy bitowej (|), aby polaczyc wszystkie maski
+    IO1DIR = IO1DIR | (LED0_bm | LED1_bm | LED2_bm | LED3_bm);
+    
+    // najpierw gasimy wszystkie diody zeby miec czysty stan
+    IO1CLR = (LED0_bm | LED1_bm | LED2_bm | LED3_bm);
+    
+    // zapalamy tylko diode LED0 na start (zgodnie z poleceniem)
+    IO1SET = LED0_bm;
+}
+
+
+int main() {
+    // jedno wywolanie zamiast ustawiania rejestrów recznie
+    LedInit(); 
+    
+    // realizujemy wedrujace swiatelko z 12 punktu
+    while(1) {
+        // skoro LED0 juz sie swieci (z LedInit), to czekamy i gasimy
+        Delay(250);
+        IO1CLR = LED0_bm;
+
+        IO1SET = LED1_bm;
+        Delay(250);
+        IO1CLR = LED1_bm;
+
+        IO1SET = LED2_bm;
+        Delay(250);
+        IO1CLR = LED2_bm;
+
+        IO1SET = LED3_bm;
+        Delay(250);
+        IO1CLR = LED3_bm;
+
+        // na koniec petli znów zapalamy LED0 zeby cykl sie powtórzyl
+        IO1SET = LED0_bm;
+    }
+}
+
+
+
+
+
+
+//PUNKT14
+#include <LPC21xx.H>
+
+#define LED0_bm 0x00010000
+#define LED1_bm 0x00020000
+#define LED2_bm 0x00040000
+#define LED3_bm 0x00080000
+
+// dobry delay
+void Delay(int iDelayInMS) {
+    int iLoopCounter;
+    int iIterations = iDelayInMS * 2500; 
+    for(iLoopCounter = 0; iLoopCounter < iIterations; iLoopCounter++) {}
+}
+
+void LedInit() {
+    // BLAD: Zwykle przypisanie "=" zamiast "IO1DIR |="
+    // To sprawi, ze bit 23 (i kazdy inny) ustawiony w DIR zniknie!
+    IO1DIR = (LED0_bm | LED1_bm | LED2_bm | LED3_bm); 
+    
+    IO1CLR = (LED0_bm | LED1_bm | LED2_bm | LED3_bm);
+    IO1SET = LED0_bm;
+}
+
+void LedOn(unsigned char ucLedIndeks) {
+    // gasimy wszystko
+    IO1CLR = (LED0_bm | LED1_bm | LED2_bm | LED3_bm);
+    
+    // zapalamy odpowiedznia diode na podstawie indeksu
+    switch(ucLedIndeks) {
+        case 0:
+            IO1SET = LED0_bm;
+            break;
+        case 1:
+            IO1SET = LED1_bm;
+            break;
+        case 2:
+            IO1SET = LED2_bm;
+            break;
+        case 3:
+            IO1SET = LED3_bm;
+            break;
+        default:
+            // to jakby podano zly numer (np. 67) - zadna sie nie zapali
+            break;
+    }
+}
+
+
+// teraz main realizujacy 12 wyglada tak:
+int main() {
+    LedInit(); // ustawia wyjscia i zapala LED0
+
+    while(1) {
+        LedOn(0);
+        Delay(250);
+        
+        LedOn(1); // LedOn za kazdym razem czysci rejestr i ustawia tylko jeden bit
+        Delay(250);
+        
+        LedOn(2);
+        Delay(250);
+        
+        LedOn(3);
+        Delay(250);
+    }
+}
+
+
+
+
+
+
+//PUNNKT15
+#include <LPC21xx.H>
+
+#define LED0_bm 0x00010000
+#define LED1_bm 0x00020000
+#define LED2_bm 0x00040000
+#define LED3_bm 0x00080000
+
+// dobry delay
+void Delay(int iDelayInMS) {
+    int iLoopCounter;
+    int iIterations = iDelayInMS * 2500; 
+    for(iLoopCounter = 0; iLoopCounter < iIterations; iLoopCounter++) {}
+}
+
+void LedInit() {
+    // WERSJA POPRAWNA (punkt 15):
+    // Uzywamy "IO1DIR |", zeby zachowac inne bity (np. bit 23)
+    IO1DIR = IO1DIR | (LED0_bm | LED1_bm | LED2_bm | LED3_bm);
+    
+    // Gasimy wszystkie diody na start
+    IO1CLR = (LED0_bm | LED1_bm | LED2_bm | LED3_bm);
+    
+    // Zapalamy tylko LED0 (punkt 13)
+    IO1SET = LED0_bm;
+}
+
+void LedOn(unsigned char ucLedIndeks) {
+    // gasimy wszystko
+    IO1CLR = (LED0_bm | LED1_bm | LED2_bm | LED3_bm);
+    
+    // zapalamy odpowiedznia diode na podstawie indeksu
+    switch(ucLedIndeks) {
+        case 0:
+            IO1SET = LED0_bm;
+            break;
+        case 1:
+            IO1SET = LED1_bm;
+            break;
+        case 2:
+            IO1SET = LED2_bm;
+            break;
+        case 3:
+            IO1SET = LED3_bm;
+            break;
+        default:
+            // to jakby podano zly numer (np. 67) - zadna sie nie zapali
+            break;
+    }
+}
+
+
+// teraz main realizujacy 12 wyglada tak:
+int main() {
+    LedInit(); // ustawia wyjscia i zapala LED0
+
+    while(1) {
+        LedOn(0);
+        Delay(250);
+        
+        LedOn(1); // LedOn za kazdym razem czysci rejestr i ustawia tylko jeden bit
+        Delay(250);
+        
+        LedOn(2);
+        Delay(250);
+        
+        LedOn(3);
+        Delay(250);
+    }
+}
+// TEST: USTAWIC W SYMULATORZE RECZNIE 23 BIT - PO URUCHOMIENIU POWINIEN ZOSTAC
+
+
+
+
+
+
+
+//PUNKT16 - tu cos nie dziala ale nie mam sily
+#include <LPC21xx.H>
+
+#define S0_bm 0x00000010  // bit 4 w rejestrze 32-bitowym
+
+#define LED0_bm 0x00010000
+#define LED1_bm 0x00020000
+#define LED2_bm 0x00040000
+#define LED3_bm 0x00080000
+
+// dobry delay
+void Delay(int iDelayInMS) {
+    int iLoopCounter;
+    int iIterations = iDelayInMS * 2500; 
+    for(iLoopCounter = 0; iLoopCounter < iIterations; iLoopCounter++) {}
+}
+
+void LedInit() {
+    // WERSJA POPRAWNA (punkt 15):
+    // Uzywamy "IO1DIR |", zeby zachowac inne bity (np. bit 23)
+    IO1DIR = IO1DIR | (LED0_bm | LED1_bm | LED2_bm | LED3_bm);
+    
+    // Gasimy wszystkie diody na start
+    IO1CLR = (LED0_bm | LED1_bm | LED2_bm | LED3_bm);
+    
+    // Zapalamy tylko LED0 (punkt 13)
+    IO1SET = LED0_bm;
+}
+
+void LedOn(unsigned char ucLedIndeks) {
+    // gasimy wszystko
+    IO1CLR = (LED0_bm | LED1_bm | LED2_bm | LED3_bm);
+    
+    // zapalamy odpowiedznia diode na podstawie indeksu
+    switch(ucLedIndeks) {
+        case 0:
+            IO1SET = LED0_bm;
+            break;
+        case 1:
+            IO1SET = LED1_bm;
+            break;
+        case 2:
+            IO1SET = LED2_bm;
+            break;
+        case 3:
+            IO1SET = LED3_bm;
+            break;
+        default:
+            // to jakby podano zly numer (np. 67) - zadna sie nie zapali
+            break;
+    }
+}
+
+unsigned char ReadButton1() {
+    // jesli po nalozeniu maski na rejestr PIN wynik to 0
+    // znaczy ze przycisk jest zwarty do masy (nacisniety)
+    if ((IO0PIN & S0_bm) == 0) {
+        return 1; // przycisk nacisniety
+    } else {
+        return 0; // przycisk puszczony
+    }
+}
+
+
+
+int main() {
+		
+		LedInit(); // ustawia wyjscia dla diod na Porcie 1
+
+    while(1) {
+        if (ReadButton1() == 1) {
+            LedOn(1); // zapal LED1 (pin 17)
+        } else {
+            LedOn(0); // zapal LED0 (pin 16)
+        }
+    }
+}
+
+
+
+
+
+
+
+//PUNKT17
+#include <LPC21xx.H>
+
+#define S0_bm 0x00000010  // bit 4 w rejestrze 32-bitowym
+
+#define LED0_bm 0x00010000
+#define LED1_bm 0x00020000
+#define LED2_bm 0x00040000
+#define LED3_bm 0x00080000
+
+// dobry delay
+void Delay(int iDelayInMS) {
+    int iLoopCounter;
+    int iIterations = iDelayInMS * 2500; 
+    for(iLoopCounter = 0; iLoopCounter < iIterations; iLoopCounter++) {}
+}
+
+void LedInit() {
+    // WERSJA POPRAWNA (punkt 15):
+    // Uzywamy "IO1DIR |", zeby zachowac inne bity (np. bit 23)
+    IO1DIR = IO1DIR | (LED0_bm | LED1_bm | LED2_bm | LED3_bm);
+    
+    // Gasimy wszystkie diody na start
+    IO1CLR = (LED0_bm | LED1_bm | LED2_bm | LED3_bm);
+    
+    // Zapalamy tylko LED0 (punkt 13)
+    IO1SET = LED0_bm;
+}
+
+void LedOn(unsigned char ucLedIndeks) {
+    // gasimy wszystko
+    IO1CLR = (LED0_bm | LED1_bm | LED2_bm | LED3_bm);
+    
+    // zapalamy odpowiedznia diode na podstawie indeksu
+    switch(ucLedIndeks) {
+        case 0:
+            IO1SET = LED0_bm;
+            break;
+        case 1:
+            IO1SET = LED1_bm;
+            break;
+        case 2:
+            IO1SET = LED2_bm;
+            break;
+        case 3:
+            IO1SET = LED3_bm;
+            break;
+        default:
+            // to jakby podano zly numer (np. 67) - zadna sie nie zapali
+            break;
+    }
+}
+
+// definicja typu enum (zgodnie z instrukcja)
+enum ButtonState {RELASED, PRESSED}; 
+
+// funkcja zwracajaca typ enum
+enum ButtonState ReadButton1() {
+    if ((IO0PIN & S0_bm) == 0) {
+        return PRESSED;
+    } else {
+        return RELASED;
+    }
+}
+
+int main() {
+	
+    LedInit();
+
+    while(1) {
+        // wybór diody za pomoca instrukcji switch
+        switch(ReadButton1()) {
+            case PRESSED:
+                LedOn(1);
+                break;
+            case RELASED:
+                LedOn(0);
+                break;
+            default:
+                break;
+        }
+    }
+}
